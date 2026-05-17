@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "jsx": "react-jsx",
+    "jsx": "react-native",
     "strict": true,
     "baseUrl": "./src"
   }

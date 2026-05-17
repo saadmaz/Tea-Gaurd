@@ -17,7 +17,7 @@ def _parse_date(date_str: str, end_of_day: bool = False) -> datetime:
     parsed = datetime.fromisoformat(date_str)
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
-    if end_of_day and "T" not in date_str:
+    if end_of_day and len(date_str.strip()) == 10:
         parsed = parsed.replace(hour=23, minute=59, second=59, microsecond=999999)
     return parsed
 
