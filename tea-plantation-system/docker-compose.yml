@@ -1,35 +1,81 @@
 version: "3.9"
+
 services:
   postgres:
-    image: postgres:16
+    image: postgres:15
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: tea_guard
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   localstack:
     image: localstack/localstack:3.5
     environment:
       - SERVICES=s3
-      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=ap-south-1
+      - LOCALSTACK_HOST=localstack
     ports:
       - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  fastapi:
-    build: ./backend
-    env_file: .env.example
+  localstack-init:
+    image: amazon/aws-cli:2.15.30
     depends_on:
-      - postgres
-      - localstack
+      localstack:
+        condition: service_healthy
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=ap-south-1
+    entrypoint: /bin/sh -c
+    command: >
+      "aws --endpoint-url=http://localstack:4566 s3 mb s3://raw-uploads 2>/dev/null || true &&
+       aws --endpoint-url=http://localstack:4566 s3 mb s3://processed-outputs 2>/dev/null || true &&
+       aws --endpoint-url=http://localstack:4566 s3 mb s3://model-artifacts 2>/dev/null || true &&
+       echo 'S3 buckets ready.'"
+
+  backend:
+    build: ./backend
+    env_file: .env
     ports:
       - "8000:8000"
-
-  flask:
-    build: ./dashboard
-    env_file: .env.example
     depends_on:
-      - fastapi
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+  dashboard:
+    build: ./dashboard
+    env_file: .env
     ports:
       - "5001:5001"
+    depends_on:
+      - postgres
+      - backend
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    command: flask run --host 0.0.0.0 --port 5001
+
+volumes:
+  postgres_data:
+  localstack_data:

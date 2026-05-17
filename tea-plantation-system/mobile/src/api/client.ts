@@ -1,33 +1,49 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const client = axios.create({ baseURL: process.env.BACKEND_URL || 'http://localhost:8000' });
+const BACKEND_URL = (process.env.BACKEND_URL || 'http://10.0.2.2:8000') + '/api/v1';
 
-client.interceptors.request.use(async config => {
-  const token = await AsyncStorage.getItem('token');
+export const apiClient = axios.create({ baseURL: BACKEND_URL });
+
+apiClient.interceptors.request.use(async config => {
+  const token = await AsyncStorage.getItem('auth_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-client.interceptors.response.use(
-  r => r,
-  async err => {
-    if (err?.response?.status === 401) {
-      await AsyncStorage.removeItem('token');
+apiClient.interceptors.response.use(
+  response => response,
+  async error => {
+    if (error?.response?.status === 401) {
+      await AsyncStorage.multiRemove(['auth_token', 'auth_user']);
+      // NavigationRef would be used here for redirect; screens handle 401 via re-render
     }
-    if (!err.response && !err.config._retried) {
-      err.config._retried = true;
-      return client.request(err.config);
+    if (!error.response && !error.config?._retried) {
+      error.config._retried = true;
+      return apiClient.request(error.config);
     }
-    return Promise.reject(err);
+    return Promise.reject(error);
   },
 );
 
-export const uploadFile = async (endpoint: string, fileUri: string, extraFields: Record<string, string>) => {
-  const data = new FormData();
-  data.append('image', { uri: fileUri, type: 'image/jpeg', name: 'upload.jpg' } as any);
-  Object.entries(extraFields).forEach(([k, v]) => data.append(k, v));
-  return client.post(endpoint, data, { headers: { 'Content-Type': 'multipart/form-data' } });
-};
+/**
+ * Generic multipart file upload. Handles both image (disease) and audio (pest) uploads.
+ * fieldName defaults to 'image'; pass 'audio' for pest detection.
+ */
+export const uploadFile = async (
+  endpoint: string,
+  fileUri: string,
+  extraFields: Record<string, string | number>,
+  fieldName: 'image' | 'audio' = 'image',
+) => {
+  const mimeType = fieldName === 'audio' ? 'audio/wav' : 'image/jpeg';
+  const fileName = fieldName === 'audio' ? 'recording.wav' : 'capture.jpg';
 
-export default client;
+  const data = new FormData();
+  data.append(fieldName, { uri: fileUri, type: mimeType, name: fileName } as any);
+  Object.entries(extraFields).forEach(([k, v]) => data.append(k, String(v)));
+
+  return apiClient.post(endpoint, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

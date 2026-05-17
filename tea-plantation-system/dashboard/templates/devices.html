@@ -1,5 +1,44 @@
 {% extends 'base.html' %}
+{% block title %}Devices{% endblock %}
 {% block content %}
-<h4>Devices</h4>
-<p>Sensor readings grouped by device id.</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">📡 IoT Devices <span class="badge bg-secondary ms-2">{{ devices|length }}</span></h4>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Device ID</th>
+          <th>Estate</th>
+          <th>Total Readings</th>
+          <th>Avg N (mg/kg)</th>
+          <th>Avg P (mg/kg)</th>
+          <th>Avg K (mg/kg)</th>
+          <th>Avg pH</th>
+          <th>Last Seen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in devices %}
+        <tr>
+          <td class="fw-semibold font-monospace">{{ d.device_id }}</td>
+          <td>{{ d.estate_name or '—' }}</td>
+          <td>{{ d.reading_count }}</td>
+          <td>{{ '%.1f'|format(d.avg_n) if d.avg_n else '—' }}</td>
+          <td>{{ '%.1f'|format(d.avg_p) if d.avg_p else '—' }}</td>
+          <td>{{ '%.1f'|format(d.avg_k) if d.avg_k else '—' }}</td>
+          <td>{{ '%.2f'|format(d.avg_ph) if d.avg_ph else '—' }}</td>
+          <td class="text-muted small">
+            {{ d.last_seen.strftime('%Y-%m-%d %H:%M') if d.last_seen else '—' }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No sensor data received yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

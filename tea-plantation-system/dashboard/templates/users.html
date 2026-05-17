@@ -1,7 +1,59 @@
 {% extends 'base.html' %}
+{% block title %}Users{% endblock %}
 {% block content %}
-<h4>Users</h4>
-<table class="table table-bordered"><thead><tr><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>
-{% for u in users %}<tr><td>{{u.email}}</td><td>{{u.role}}</td><td>{{u.is_active}}</td></tr>{% endfor %}
-</tbody></table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">👤 Users <span class="badge bg-secondary ms-2">{{ users|length }}</span></h4>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Email</th>
+          <th>Full Name</th>
+          <th>Role</th>
+          <th>Estate</th>
+          <th>District</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-semibold">{{ u.email }}</td>
+          <td>{{ u.full_name }}</td>
+          <td>
+            <span class="badge badge-role-{{ u.role }}">{{ u.role }}</span>
+          </td>
+          <td>{{ u.estate_name or '—' }}</td>
+          <td>{{ u.district or '—' }}</td>
+          <td>
+            {% if u.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">
+            {{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}
+          </td>
+          <td>
+            <form method="post" action="/users/{{ u.id }}/deactivate" style="display:inline">
+              <button type="submit" class="btn btn-sm {{ 'btn-outline-danger' if u.is_active else 'btn-outline-success' }}"
+                onclick="return confirm('Toggle user status?')">
+                {{ 'Deactivate' if u.is_active else 'Activate' }}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

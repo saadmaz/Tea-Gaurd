@@ -1,8 +1,11 @@
+import logging
 from io import BytesIO
 
 import numpy as np
 from PIL import Image
 from sklearn.cluster import KMeans
+
+logger = logging.getLogger(__name__)
 
 
 def assess_damage(image_bytes: bytes, disease_label: str, mask_model=None):
@@ -13,6 +16,7 @@ def assess_damage(image_bytes: bytes, disease_label: str, mask_model=None):
         mask = mask_model.predict(arr)  # pragma: no cover
         plant_pixels = arr[mask > 0]
     else:
+        logger.warning("WARNING: damage_maskrcnn not loaded. Falling back to full-image KMeans (no object segmentation).")
         plant_pixels = arr.reshape(-1, 3)
 
     n_clusters = 10 if disease_label == "tea_blister_blight" else 3

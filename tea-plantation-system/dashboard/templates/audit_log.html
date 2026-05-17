@@ -1,7 +1,61 @@
 {% extends 'base.html' %}
+{% block title %}Audit Log{% endblock %}
 {% block content %}
-<h4>Audit Log</h4>
-<table class="table"><thead><tr><th>Action</th><th>Endpoint</th><th>Created</th></tr></thead><tbody>
-{% for l in logs %}<tr><td>{{l.action}}</td><td>{{l.endpoint}}</td><td>{{l.created_at}}</td></tr>{% endfor %}
-</tbody></table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">📋 Audit Log</h4>
+  <small class="text-muted">Page {{ page }} of {{ total_pages }}</small>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle small">
+      <thead class="table-light">
+        <tr>
+          <th>User</th>
+          <th>Action</th>
+          <th>Endpoint</th>
+          <th>IP Address</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in logs %}
+        <tr>
+          <td>{{ l.user_email or '<em>system</em>'|safe }}</td>
+          <td><code>{{ l.action }}</code></td>
+          <td class="text-muted font-monospace">{{ l.endpoint or '—' }}</td>
+          <td class="text-muted">{{ l.ip_address or '—' }}</td>
+          <td class="text-muted">
+            {{ l.created_at.strftime('%Y-%m-%d %H:%M:%S') if l.created_at else '—' }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No audit log entries yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if total_pages > 1 %}
+<nav class="mt-3">
+  <ul class="pagination justify-content-center">
+    {% if page > 1 %}
+    <li class="page-item"><a class="page-link" href="?page={{ page - 1 }}">Previous</a></li>
+    {% endif %}
+    {% for p in range(1, total_pages + 1) %}
+      {% if p == page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+      {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
+        <li class="page-item"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+      {% elif p == 4 or p == total_pages - 3 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+    {% if page < total_pages %}
+    <li class="page-item"><a class="page-link" href="?page={{ page + 1 }}">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
 {% endblock %}

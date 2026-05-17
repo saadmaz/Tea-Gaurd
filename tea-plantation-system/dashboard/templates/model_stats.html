@@ -1,7 +1,65 @@
 {% extends 'base.html' %}
+{% block title %}Model Stats{% endblock %}
 {% block content %}
-<h4>Model Health</h4>
-<table class="table table-striped"><thead><tr><th>Name</th><th>Size</th><th>Status</th><th>Last Used</th></tr></thead><tbody>
-{% for m in models %}<tr><td>{{m.name}}</td><td>{{m.file_size}}</td><td>{{m.load_status}}</td><td>{{m.last_used}}</td></tr>{% endfor %}
-</tbody></table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">🤖 ML Model Health</h4>
+  {% if backend_health %}
+  <span class="badge bg-success">Backend Online</span>
+  {% else %}
+  <span class="badge bg-warning text-dark">Backend Unreachable</span>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Artifact File</th>
+          <th>File Size</th>
+          <th>Status</th>
+          <th>Last Modified</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in models %}
+        <tr>
+          <td class="fw-semibold font-monospace">{{ m.name }}</td>
+          <td>{{ m.file_size }}</td>
+          <td>
+            {% if m.load_status == 'present' %}
+              <span class="badge bg-success">Present</span>
+            {% else %}
+              <span class="badge bg-danger">Missing</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ m.last_modified }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center text-muted py-4">No model information available.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header fw-semibold">Model Artifact Instructions</div>
+    <div class="card-body">
+      <p class="mb-2 text-muted small">
+        Run the training notebooks in <code>/ml_training/</code> to generate artifacts, then copy them to
+        <code>{{ model_artifacts_path | default('/app/ml/model_artifacts/') }}</code>.
+      </p>
+      <ul class="small text-muted mb-0">
+        <li><code>weather_gbc.pkl</code> — GradientBoostingClassifier for weather category</li>
+        <li><code>weather_scaler.pkl</code> — StandardScaler for weather features</li>
+        <li><code>fertilizer_type_gbc.pkl</code> — GBC for fertilizer type prediction</li>
+        <li><code>fertilizer_amount_models.pkl</code> — Per-type LinearRegression dict</li>
+        <li><code>disease_resnet50.keras</code> — ResNet50 fine-tuned for 4-class disease detection</li>
+        <li><code>pest_cnn.keras</code> — CNN for audio-based pest detection</li>
+      </ul>
+    </div>
+  </div>
+</div>
 {% endblock %}

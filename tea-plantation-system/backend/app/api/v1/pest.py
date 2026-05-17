@@ -34,7 +34,7 @@ async def detect_pest(
 
     audio_id = str(uuid.uuid4())
     raw_key = f'raw-uploads/{user.estate_id}/{audio_id}.wav'
-    upload_file(content, settings.S3_BUCKET, raw_key)
+    upload_file(content, settings.S3_RAW_UPLOADS_BUCKET, raw_key)
 
     pred = run_pest_detection(getattr(request.app.state, 'pest_model', None), processed)
     detection = Detection(

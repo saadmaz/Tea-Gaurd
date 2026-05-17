@@ -44,10 +44,14 @@ def history(
     rows = q.order_by(Detection.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
     results = [{
         'id': str(r.id),
+        'user_id': str(r.user_id) if r.user_id else None,
+        'estate_id': str(r.estate_id) if r.estate_id else None,
         'detection_type': r.detection_type.value,
-        'label': r.result_label,
+        'result_label': r.result_label,
         'confidence': r.confidence,
         'damage_pct': r.damage_pct,
+        'latitude': r.latitude,
+        'longitude': r.longitude,
         'created_at': r.created_at.isoformat(),
     } for r in rows]
     return envelope('success', {'total': total, 'page': page, 'results': results}, None)
@@ -64,9 +68,9 @@ def get_detection(detection_id: uuid.UUID, user: User = Depends(get_current_user
         'result_label': row.result_label,
         'confidence': row.confidence,
         'damage_pct': row.damage_pct,
-        'image_url': generate_presigned_url(settings.S3_BUCKET, row.image_s3_key) if row.image_s3_key else None,
-        'annotated_image_url': generate_presigned_url(settings.S3_BUCKET, row.annotated_s3_key) if row.annotated_s3_key else None,
-        'audio_url': generate_presigned_url(settings.S3_BUCKET, row.audio_s3_key) if row.audio_s3_key else None,
+        'image_url': generate_presigned_url(settings.S3_RAW_UPLOADS_BUCKET, row.image_s3_key) if row.image_s3_key else None,
+        'annotated_image_url': generate_presigned_url(settings.S3_PROCESSED_BUCKET, row.annotated_s3_key) if row.annotated_s3_key else None,
+        'audio_url': generate_presigned_url(settings.S3_RAW_UPLOADS_BUCKET, row.audio_s3_key) if row.audio_s3_key else None,
         'metadata': row.metadata_json,
         'created_at': row.created_at.isoformat(),
     }, None)

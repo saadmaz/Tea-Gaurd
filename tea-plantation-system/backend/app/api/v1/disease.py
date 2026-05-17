@@ -35,7 +35,7 @@ async def detect_disease(
 
     image_id = str(uuid.uuid4())
     raw_key = f'raw-uploads/{user.estate_id}/{image_id}.jpg'
-    upload_file(content, settings.S3_BUCKET, raw_key)
+    upload_file(content, settings.S3_RAW_UPLOADS_BUCKET, raw_key)
 
     pred = run_disease_detection(getattr(request.app.state, 'disease_model', None), processed)
     label = pred['label']
@@ -46,7 +46,7 @@ async def detect_disease(
         damage = run_damage_assessment(content, label, getattr(request.app.state, 'damage_maskrcnn', None))
         damage_pct = damage['damage_pct']
         annotated_key = f'processed-outputs/{user.estate_id}/{image_id}_annotated.jpg'
-        upload_file(damage['annotated_image_bytes'], settings.S3_BUCKET, annotated_key)
+        upload_file(damage['annotated_image_bytes'], settings.S3_PROCESSED_BUCKET, annotated_key)
 
     if label == 'tea_blister_blight':
         detection_type = DetectionType.disease_blight
@@ -76,6 +76,6 @@ async def detect_disease(
         'confidence': pred['confidence'],
         'is_diseased': is_diseased,
         'damage_pct': damage_pct,
-        'annotated_image_url': generate_presigned_url(settings.S3_BUCKET, annotated_key) if annotated_key else None,
+        'annotated_image_url': generate_presigned_url(settings.S3_PROCESSED_BUCKET, annotated_key) if annotated_key else None,
         'gps_marker_id': str(detection.id),
     }, None)

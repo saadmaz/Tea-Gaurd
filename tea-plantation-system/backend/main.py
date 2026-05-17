@@ -16,6 +16,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Tea Plantation Smart Monitoring API", lifespan=lifespan)
 
 
+@app.get("/api/v1/health")
+def health():
+    return {"status": "ok", "version": "1.0.0"}
+
+
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(weather.router, prefix="/api/v1/weather", tags=["weather"])
 app.include_router(fertilizer.router, prefix="/api/v1/fertilizer", tags=["fertilizer"])
