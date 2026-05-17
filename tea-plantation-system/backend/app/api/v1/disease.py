@@ -48,10 +48,17 @@ async def detect_disease(
         annotated_key = f'processed-outputs/{user.estate_id}/{image_id}_annotated.jpg'
         upload_file(damage['annotated_image_bytes'], settings.S3_BUCKET, annotated_key)
 
+    if label == 'tea_blister_blight':
+        detection_type = DetectionType.disease_blight
+    elif label == 'stem_branch_canker':
+        detection_type = DetectionType.disease_canker
+    else:
+        detection_type = DetectionType.healthy
+
     detection = Detection(
         user_id=user.id,
         estate_id=user.estate_id,
-        detection_type=DetectionType.disease_blight if label == 'tea_blister_blight' else (DetectionType.disease_canker if label == 'stem_branch_canker' else DetectionType.healthy),
+        detection_type=detection_type,
         result_label=label,
         confidence=pred['confidence'],
         damage_pct=damage_pct,

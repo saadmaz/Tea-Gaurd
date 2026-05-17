@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, func, text
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, desc, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,7 +20,7 @@ class DetectionType(str, enum.Enum):
 class Detection(Base):
     __tablename__ = "detections"
     __table_args__ = (
-        Index("ix_detections_estate_type_created", "estate_id", "detection_type", text("created_at DESC")),
+        Index("ix_detections_estate_type_created", "estate_id", "detection_type", desc("created_at")),
         Index("ix_detections_lat_lon", "latitude", "longitude", postgresql_where=text("latitude IS NOT NULL")),
     )
 

@@ -1,4 +1,5 @@
 import os
+from hmac import compare_digest
 from collections import defaultdict
 
 import requests
@@ -16,7 +17,7 @@ def require_admin():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if request.form.get('email') == os.getenv('ADMIN_EMAIL') and request.form.get('password') == os.getenv('ADMIN_PASSWORD'):
+        if compare_digest(request.form.get('email', ''), os.getenv('ADMIN_EMAIL', '')) and compare_digest(request.form.get('password', ''), os.getenv('ADMIN_PASSWORD', '')):
             session['admin_logged_in'] = True
             return redirect(url_for('users'))
     return '''<html><body><h3>Admin Login</h3><form method="post"><input name="email" placeholder="Email"/><input type="password" name="password" placeholder="Password"/><button>Login</button></form></body></html>'''
