@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h4>Audit Log</h4>
+<table class="table"><thead><tr><th>Action</th><th>Endpoint</th><th>Created</th></tr></thead><tbody>
+{% for l in logs %}<tr><td>{{l.action}}</td><td>{{l.endpoint}}</td><td>{{l.created_at}}</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}

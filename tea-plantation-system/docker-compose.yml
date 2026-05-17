@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tea_guard
+    ports:
+      - "5432:5432"
+
+  localstack:
+    image: localstack/localstack:3.5
+    environment:
+      - SERVICES=s3
+      - AWS_DEFAULT_REGION=us-east-1
+    ports:
+      - "4566:4566"
+
+  fastapi:
+    build: ./backend
+    env_file: .env.example
+    depends_on:
+      - postgres
+      - localstack
+    ports:
+      - "8000:8000"
+
+  flask:
+    build: ./dashboard
+    env_file: .env.example
+    depends_on:
+      - fastapi
+    ports:
+      - "5001:5001"

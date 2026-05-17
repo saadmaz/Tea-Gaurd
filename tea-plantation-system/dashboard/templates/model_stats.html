@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h4>Model Health</h4>
+<table class="table table-striped"><thead><tr><th>Name</th><th>Size</th><th>Status</th><th>Last Used</th></tr></thead><tbody>
+{% for m in models %}<tr><td>{{m.name}}</td><td>{{m.file_size}}</td><td>{{m.load_status}}</td><td>{{m.last_used}}</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}
