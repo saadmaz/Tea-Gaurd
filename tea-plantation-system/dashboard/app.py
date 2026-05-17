@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import requests
 from flask import Flask, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dashboard-secret')
@@ -17,7 +18,14 @@ def require_admin():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if compare_digest(request.form.get('email', ''), os.getenv('ADMIN_EMAIL', '')) and compare_digest(request.form.get('password', ''), os.getenv('ADMIN_PASSWORD', '')):
+        input_email = request.form.get('email', '')
+        input_password = request.form.get('password', '')
+        stored_email = os.getenv('ADMIN_EMAIL', '')
+        stored_password_hash = os.getenv('ADMIN_PASSWORD_HASH', '')
+        stored_password_plain = os.getenv('ADMIN_PASSWORD', '')
+
+        password_ok = check_password_hash(stored_password_hash, input_password) if stored_password_hash else compare_digest(input_password, stored_password_plain)
+        if compare_digest(input_email, stored_email) and password_ok:
             session['admin_logged_in'] = True
             return redirect(url_for('users'))
     return '''<html><body><h3>Admin Login</h3><form method="post"><input name="email" placeholder="Email"/><input type="password" name="password" placeholder="Password"/><button>Login</button></form></body></html>'''
