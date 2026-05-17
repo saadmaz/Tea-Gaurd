@@ -1,2 +1,11 @@
 __pycache__/
 *.pyc
+
+# Node / React Native
+node_modules/
+mobile/mobile/
+
+# Android build artifacts
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
