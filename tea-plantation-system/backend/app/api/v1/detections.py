@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -11,6 +11,15 @@ from app.models.user import User
 from app.services.s3_service import generate_presigned_url
 
 router = APIRouter()
+
+
+def _parse_date(date_str: str, end_of_day: bool = False) -> datetime:
+    parsed = datetime.fromisoformat(date_str)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    if end_of_day and "T" not in date_str:
+        parsed = parsed.replace(hour=23, minute=59, second=59, microsecond=999999)
+    return parsed
 
 
 @router.get('/history')
@@ -27,9 +36,9 @@ def history(
     if detection_type:
         q = q.filter(Detection.detection_type == detection_type)
     if start_date:
-        q = q.filter(Detection.created_at >= datetime.fromisoformat(start_date))
+        q = q.filter(Detection.created_at >= _parse_date(start_date))
     if end_date:
-        q = q.filter(Detection.created_at <= datetime.fromisoformat(end_date))
+        q = q.filter(Detection.created_at <= _parse_date(end_date, end_of_day=True))
 
     total = q.count()
     rows = q.order_by(Detection.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()

@@ -1,16 +1,19 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.api.v1 import auth, weather, fertilizer, disease, pest, sensor, detections, map as map_router
 from app.core.database import Base, engine
 from app.ml.model_loader import load_models
 
-app = FastAPI(title="Tea Plantation Smart Monitoring API")
-
-
-@app.on_event("startup")
-def startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     load_models(app)
+    yield
+
+
+app = FastAPI(title="Tea Plantation Smart Monitoring API", lifespan=lifespan)
 
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])

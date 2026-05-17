@@ -22,9 +22,7 @@ def login():
         input_password = request.form.get('password', '')
         stored_email = os.getenv('ADMIN_EMAIL', '')
         stored_password_hash = os.getenv('ADMIN_PASSWORD_HASH', '')
-        stored_password_plain = os.getenv('ADMIN_PASSWORD', '')
-
-        password_ok = check_password_hash(stored_password_hash, input_password) if stored_password_hash else compare_digest(input_password, stored_password_plain)
+        password_ok = check_password_hash(stored_password_hash, input_password) if stored_password_hash else False
         if compare_digest(input_email, stored_email) and password_ok:
             session['admin_logged_in'] = True
             return redirect(url_for('users'))
